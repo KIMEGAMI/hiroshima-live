@@ -39,16 +39,18 @@ class LivePostController extends Controller
             $imagePath = '/storage/' . $path;
         }
 
-        $livePost = LivePost::create([
-            'title' => $validated['title'],
-            'event_date' => $validated['event_date'],
-            'open_time' => $validated['open_time'] ?? null,
-            'start_time' => $validated['start_time'] ?? null,
-            'live_house' => $validated['live_house'] ?? null,
-            'artist' => $validated['artist'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'image_path' => $imagePath,
-        ]);
+       $livePost = LivePost::create([
+    'user_id' => $request->user()->id,
+
+    'title' => $validated['title'],
+    'event_date' => $validated['event_date'],
+    'open_time' => $validated['open_time'] ?? null,
+    'start_time' => $validated['start_time'] ?? null,
+    'live_house' => $validated['live_house'] ?? null,
+    'artist' => $validated['artist'] ?? null,
+    'description' => $validated['description'] ?? null,
+    'image_path' => $imagePath,
+]);
 
         return response()->json($livePost, 201);
     }
