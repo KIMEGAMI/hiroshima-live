@@ -12,7 +12,7 @@
 
             <div
                 v-if="live"
-                class="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-white/5"
+                class="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl"
             >
                 <img
                     :src="live.image_path"
@@ -44,7 +44,12 @@
                 </div>
             </div>
 
-            <div v-else class="mt-8 text-zinc-400">読み込み中です...</div>
+            <div
+                v-else
+                class="mt-8 rounded-3xl border border-white/10 bg-white/5 p-8 text-zinc-400"
+            >
+                読み込み中です...
+            </div>
         </main>
 
         <AppFooter />

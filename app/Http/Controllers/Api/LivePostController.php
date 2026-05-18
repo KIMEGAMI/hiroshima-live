@@ -19,6 +19,40 @@ class LivePostController extends Controller
         return $query->latest()->get();
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'event_date' => ['required', 'date'],
+            'open_time' => ['nullable'],
+            'start_time' => ['nullable'],
+            'live_house' => ['nullable', 'string', 'max:255'],
+            'artist' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        $imagePath = '/images/hiroshima.png';
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('live_images', 'public');
+            $imagePath = '/storage/' . $path;
+        }
+
+        $livePost = LivePost::create([
+            'title' => $validated['title'],
+            'event_date' => $validated['event_date'],
+            'open_time' => $validated['open_time'] ?? null,
+            'start_time' => $validated['start_time'] ?? null,
+            'live_house' => $validated['live_house'] ?? null,
+            'artist' => $validated['artist'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'image_path' => $imagePath,
+        ]);
+
+        return response()->json($livePost, 201);
+    }
+
     public function show($id)
     {
         return LivePost::findOrFail($id);

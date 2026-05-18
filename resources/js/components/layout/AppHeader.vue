@@ -22,6 +22,12 @@
                 >
                 <a href="/login" class="hover:text-white">ログイン</a>
             </nav>
+            <RouterLink
+                to="/lives/create"
+                class="rounded-full bg-red-500 px-5 py-2 text-sm font-bold text-white hover:bg-red-600"
+            >
+                ライブ投稿
+            </RouterLink>
         </div>
     </header>
 </template>
