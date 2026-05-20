@@ -89,23 +89,50 @@
                 <aside
                     class="rounded-3xl border border-white/10 bg-white/5 p-6"
                 >
-                    <div class="mb-5 flex items-center justify-between">
-                        <div>
+                    <div class="mb-5 flex items-center justify-between gap-3">
+                        <button
+                            type="button"
+                            class="rounded-full border border-white/20 px-3 py-1 font-bold hover:bg-white/10"
+                            @click="moveMonth(-1)"
+                        >
+                            ←
+                        </button>
+
+                        <div class="text-center">
                             <p class="text-sm font-bold text-red-400">
                                 MINI CALENDAR
                             </p>
 
-                            <h2 class="mt-1 text-2xl font-black">2026年6月</h2>
+                            <h2 class="mt-1 text-2xl font-black">
+                                {{ currentYear }}年{{ currentMonth }}月
+                            </h2>
                         </div>
 
                         <button
-                            v-if="selectedDate"
-                            class="text-sm text-zinc-400 hover:text-white"
-                            @click="clearDate"
+                            type="button"
+                            class="rounded-full border border-white/20 px-3 py-1 font-bold hover:bg-white/10"
+                            @click="moveMonth(1)"
                         >
-                            解除
+                            →
                         </button>
                     </div>
+
+                    <button
+                        type="button"
+                        class="mb-5 rounded-full border border-white/20 px-4 py-2 text-sm font-bold hover:bg-white/10"
+                        @click="backToThisMonth"
+                    >
+                        今月へ戻る
+                    </button>
+
+                    <button
+                        v-if="selectedDate"
+                        type="button"
+                        class="mb-5 ml-3 text-sm text-zinc-400 hover:text-white"
+                        @click="clearDate"
+                    >
+                        選択解除
+                    </button>
 
                     <div class="grid grid-cols-7 gap-2 text-center text-sm">
                         <div
@@ -116,16 +143,22 @@
                             {{ day }}
                         </div>
 
+                        <div
+                            v-for="blank in firstDayOfMonth"
+                            :key="'blank-' + blank"
+                        ></div>
+
                         <button
-                            v-for="date in 30"
+                            v-for="date in daysInMonth"
                             :key="date"
+                            type="button"
                             class="rounded-xl py-3 text-zinc-300 transition hover:bg-white/10"
                             :class="{
                                 'bg-red-500 text-white font-bold':
-                                    selectedDay === date,
+                                    selectedDate === formatDate(date),
                                 'border border-red-500/60':
                                     eventDays.includes(date) &&
-                                    selectedDay !== date,
+                                    selectedDate !== formatDate(date),
                             }"
                             @click="selectDate(date)"
                         >
@@ -158,24 +191,42 @@ import AppHeader from "../components/layout/AppHeader.vue";
 import AppFooter from "../components/layout/AppFooter.vue";
 import LiveCard from "../components/lives/LiveCard.vue";
 
+const today = new Date();
+
+const displayYear = ref(today.getFullYear());
+const displayMonthIndex = ref(today.getMonth());
+
 const lives = ref([]);
 const allLives = ref([]);
 const selectedDate = ref(null);
 
 const days = ["日", "月", "火", "水", "木", "金", "土"];
 
-const eventDays = computed(() => {
-    return allLives.value
-        .map((live) => Number(live.event_date?.slice(8, 10)))
-        .filter((day) => !Number.isNaN(day));
+const currentYear = computed(() => displayYear.value);
+
+const currentMonth = computed(() => displayMonthIndex.value + 1);
+
+const currentYearMonth = computed(() => {
+    return `${displayYear.value}-${String(displayMonthIndex.value + 1).padStart(2, "0")}`;
 });
 
-const selectedDay = computed(() => {
-    if (!selectedDate.value) {
-        return null;
-    }
+const daysInMonth = computed(() => {
+    return new Date(
+        displayYear.value,
+        displayMonthIndex.value + 1,
+        0,
+    ).getDate();
+});
 
-    return Number(selectedDate.value.slice(8, 10));
+const firstDayOfMonth = computed(() => {
+    return new Date(displayYear.value, displayMonthIndex.value, 1).getDay();
+});
+
+const eventDays = computed(() => {
+    return allLives.value
+        .filter((live) => live.event_date?.startsWith(currentYearMonth.value))
+        .map((live) => Number(live.event_date?.slice(8, 10)))
+        .filter((day) => !Number.isNaN(day));
 });
 
 const selectedDateLabel = computed(() => {
@@ -186,6 +237,10 @@ const selectedDateLabel = computed(() => {
     return selectedDate.value.replaceAll("-", "/");
 });
 
+const formatDate = (date) => {
+    return `${currentYearMonth.value}-${String(date).padStart(2, "0")}`;
+};
+
 const fetchLives = async () => {
     const response = await fetch("/api/lives");
     const data = await response.json();
@@ -195,8 +250,7 @@ const fetchLives = async () => {
 };
 
 const selectDate = async (date) => {
-    const day = String(date).padStart(2, "0");
-    selectedDate.value = `2026-06-${day}`;
+    selectedDate.value = formatDate(date);
 
     const response = await fetch(`/api/lives?date=${selectedDate.value}`);
     lives.value = await response.json();
@@ -205,6 +259,26 @@ const selectDate = async (date) => {
 const clearDate = () => {
     selectedDate.value = null;
     lives.value = allLives.value.slice(0, 3);
+};
+
+const moveMonth = (amount) => {
+    const nextMonth = new Date(
+        displayYear.value,
+        displayMonthIndex.value + amount,
+        1,
+    );
+
+    displayYear.value = nextMonth.getFullYear();
+    displayMonthIndex.value = nextMonth.getMonth();
+
+    clearDate();
+};
+
+const backToThisMonth = () => {
+    displayYear.value = today.getFullYear();
+    displayMonthIndex.value = today.getMonth();
+
+    clearDate();
 };
 
 onMounted(() => {
