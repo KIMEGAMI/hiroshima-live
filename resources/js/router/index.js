@@ -6,26 +6,16 @@ import Register from "../pages/Register.vue";
 import LivesPage from "../pages/LivesPage.vue";
 import LiveCreatePage from "../pages/LiveCreatePage.vue";
 import LiveDetailPage from "../pages/LiveDetailPage.vue";
+import LiveEditPage from "../pages/LiveEditPage.vue";
+import MyPage from "../pages/MyPage.vue";
 import CalendarPage from "../pages/CalendarPage.vue";
 import ForgotPassword from "../pages/ForgotPassword.vue";
 import ResetPassword from "../pages/ResetPassword.vue";
 
 const routes = [
-    {
-        path: "/",
-        name: "home",
-        component: TopPage,
-    },
-    {
-        path: "/login",
-        name: "login",
-        component: Login,
-    },
-    {
-        path: "/register",
-        name: "register",
-        component: Register,
-    },
+    { path: "/", name: "home", component: TopPage },
+    { path: "/login", name: "login", component: Login },
+    { path: "/register", name: "register", component: Register },
     {
         path: "/forgot-password",
         name: "password.forgot",
@@ -36,26 +26,12 @@ const routes = [
         name: "password.reset",
         component: ResetPassword,
     },
-    {
-        path: "/lives",
-        name: "lives.index",
-        component: LivesPage,
-    },
-    {
-        path: "/lives/create",
-        name: "lives.create",
-        component: LiveCreatePage,
-    },
-    {
-        path: "/lives/:id",
-        name: "lives.show",
-        component: LiveDetailPage,
-    },
-    {
-        path: "/calendar",
-        name: "calendar",
-        component: CalendarPage,
-    },
+    { path: "/mypage", name: "mypage", component: MyPage },
+    { path: "/lives", name: "lives.index", component: LivesPage },
+    { path: "/lives/create", name: "lives.create", component: LiveCreatePage },
+    { path: "/lives/:id/edit", name: "lives.edit", component: LiveEditPage },
+    { path: "/lives/:id", name: "lives.show", component: LiveDetailPage },
+    { path: "/calendar", name: "calendar", component: CalendarPage },
 ];
 
 const router = createRouter({

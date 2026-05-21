@@ -4,6 +4,7 @@
 
         <main class="mx-auto max-w-6xl px-6 py-12">
             <p class="text-sm font-bold text-red-400">CALENDAR</p>
+
             <h1 class="mt-2 text-4xl font-black">ライブカレンダー</h1>
 
             <div class="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">
@@ -71,7 +72,9 @@
                                 hasEvent(date),
                         }"
                     >
-                        <p class="font-bold">{{ date }}</p>
+                        <p class="font-bold">
+                            {{ date }}
+                        </p>
 
                         <p
                             v-if="hasEvent(date)"
@@ -105,7 +108,9 @@ const lives = ref([]);
 
 const currentYear = computed(() => displayYear.value);
 
-const currentMonth = computed(() => displayMonthIndex.value + 1);
+const currentMonth = computed(() => {
+    return displayMonthIndex.value + 1;
+});
 
 const currentYearMonth = computed(() => {
     return `${displayYear.value}-${String(displayMonthIndex.value + 1).padStart(2, "0")}`;
@@ -125,9 +130,15 @@ const firstDayOfMonth = computed(() => {
 
 const eventDays = computed(() => {
     return lives.value
-        .filter((live) => live.event_date?.startsWith(currentYearMonth.value))
-        .map((live) => Number(live.event_date?.slice(8, 10)))
-        .filter((day) => !Number.isNaN(day));
+        .filter((live) => {
+            return live.event_date?.startsWith(currentYearMonth.value);
+        })
+        .map((live) => {
+            return Number(live.event_date?.slice(8, 10));
+        })
+        .filter((day) => {
+            return !Number.isNaN(day);
+        });
 });
 
 const formatDate = (date) => {
@@ -156,6 +167,7 @@ const backToThisMonth = () => {
 
 const fetchLives = async () => {
     const response = await fetch("/api/lives");
+
     lives.value = await response.json();
 };
 

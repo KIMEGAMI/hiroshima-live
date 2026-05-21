@@ -27,9 +27,18 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-bold">
-                            パスワード
-                        </label>
+                        <div class="mb-2 flex items-center justify-between">
+                            <label class="block text-sm font-bold">
+                                パスワード
+                            </label>
+
+                            <RouterLink
+                                to="/forgot-password"
+                                class="text-sm font-bold text-red-400 hover:text-red-300"
+                            >
+                                パスワードを忘れた方
+                            </RouterLink>
+                        </div>
 
                         <input
                             v-model="form.password"

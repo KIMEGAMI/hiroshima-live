@@ -18,7 +18,7 @@
                         広島のライブハウス、アーティスト、イベント情報をまとめて探せるライブ情報掲示板です。
                     </p>
 
-                    <div class="mt-8 flex gap-4">
+                    <div class="mt-8 flex flex-wrap gap-4">
                         <RouterLink
                             to="/lives"
                             class="rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600"
@@ -32,11 +32,18 @@
                         >
                             カレンダーを見る
                         </RouterLink>
+
+                        <RouterLink
+                            to="/lives/create"
+                            class="rounded-full border border-red-500/50 px-6 py-3 font-bold text-red-300 hover:bg-red-500/10"
+                        >
+                            ライブを投稿
+                        </RouterLink>
                     </div>
                 </div>
 
                 <img
-                    :src="'/images/hiroshima.png'"
+                    src="/images/hiroshima.png"
                     alt="広島ライブ"
                     class="rounded-3xl border border-white/10 shadow-2xl"
                 />
@@ -68,7 +75,14 @@
                     </div>
 
                     <div
-                        v-if="lives.length > 0"
+                        v-if="isLoading"
+                        class="rounded-3xl border border-white/10 bg-white/5 p-8 text-zinc-400"
+                    >
+                        読み込み中です。
+                    </div>
+
+                    <div
+                        v-else-if="lives.length > 0"
                         class="grid gap-6 md:grid-cols-2"
                     >
                         <LiveCard
@@ -154,7 +168,7 @@
                             type="button"
                             class="rounded-xl py-3 text-zinc-300 transition hover:bg-white/10"
                             :class="{
-                                'bg-red-500 text-white font-bold':
+                                'bg-red-500 font-bold text-white':
                                     selectedDate === formatDate(date),
                                 'border border-red-500/60':
                                     eventDays.includes(date) &&
@@ -199,12 +213,15 @@ const displayMonthIndex = ref(today.getMonth());
 const lives = ref([]);
 const allLives = ref([]);
 const selectedDate = ref(null);
+const isLoading = ref(false);
 
 const days = ["日", "月", "火", "水", "木", "金", "土"];
 
 const currentYear = computed(() => displayYear.value);
 
-const currentMonth = computed(() => displayMonthIndex.value + 1);
+const currentMonth = computed(() => {
+    return displayMonthIndex.value + 1;
+});
 
 const currentYearMonth = computed(() => {
     return `${displayYear.value}-${String(displayMonthIndex.value + 1).padStart(2, "0")}`;
@@ -242,23 +259,49 @@ const formatDate = (date) => {
 };
 
 const fetchLives = async () => {
-    const response = await fetch("/api/lives");
-    const data = await response.json();
+    isLoading.value = true;
 
-    allLives.value = data;
-    lives.value = data.slice(0, 3);
+    try {
+        const response = await fetch("/api/lives", {
+            headers: {
+                Accept: "application/json",
+            },
+        });
+
+        const data = await response.json();
+
+        allLives.value = data;
+        lives.value = data.slice(0, 4);
+    } catch (error) {
+        allLives.value = [];
+        lives.value = [];
+    } finally {
+        isLoading.value = false;
+    }
 };
 
 const selectDate = async (date) => {
     selectedDate.value = formatDate(date);
+    isLoading.value = true;
 
-    const response = await fetch(`/api/lives?date=${selectedDate.value}`);
-    lives.value = await response.json();
+    try {
+        const response = await fetch(`/api/lives?date=${selectedDate.value}`, {
+            headers: {
+                Accept: "application/json",
+            },
+        });
+
+        lives.value = await response.json();
+    } catch (error) {
+        lives.value = [];
+    } finally {
+        isLoading.value = false;
+    }
 };
 
 const clearDate = () => {
     selectedDate.value = null;
-    lives.value = allLives.value.slice(0, 3);
+    lives.value = allLives.value.slice(0, 4);
 };
 
 const moveMonth = (amount) => {
