@@ -10,6 +10,11 @@
                 class="text-xl font-black tracking-wide text-white"
             >
                 Hiroshima<span class="text-red-500">Live</span>
+                <h2 class="text-xl font-bold">
+                    <span class="ml-2 text-sm text-red-400 font-normal">
+                        [β版]
+                    </span>
+                </h2>
             </RouterLink>
 
             <nav

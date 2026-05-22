@@ -1,109 +1,179 @@
 <template>
     <div class="min-h-screen bg-zinc-950 text-white">
-        <AppHeader />
-
-        <main class="mx-auto max-w-5xl px-6 py-12">
-            <RouterLink
-                to="/lives"
-                class="text-sm font-bold text-zinc-400 hover:text-white"
-            >
-                ← ライブ一覧へ戻る
-            </RouterLink>
-
-            <div
-                v-if="isLoading"
-                class="mt-8 rounded-3xl border border-white/10 bg-white/5 p-8 text-zinc-400"
-            >
-                読み込み中です...
+        <div class="max-w-4xl mx-auto px-4 py-10">
+            <div class="mb-6">
+                <RouterLink
+                    to="/"
+                    class="text-sm text-zinc-400 hover:text-white transition"
+                >
+                    ← トップへ戻る
+                </RouterLink>
             </div>
 
             <div
-                v-else-if="errorMessage"
-                class="mt-8 rounded-3xl border border-red-500/40 bg-red-500/10 p-8 text-red-300"
+                v-if="live"
+                class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl"
             >
-                {{ errorMessage }}
-            </div>
-
-            <div
-                v-else-if="live"
-                class="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl"
-            >
-                <div class="bg-zinc-900 p-6">
+                <div
+                    v-if="imageSrc"
+                    class="w-full bg-black flex items-center justify-center p-4"
+                >
                     <img
-                        :src="imageUrl"
-                        :alt="live.title || 'ライブ画像'"
-                        class="mx-auto aspect-[2/3] max-h-[720px] w-full max-w-md rounded-2xl object-cover"
+                        :src="imageSrc"
+                        :alt="live.title"
+                        class="max-w-full max-h-[70vh] object-contain rounded-xl"
                     />
                 </div>
 
-                <div class="p-8">
-                    <p class="text-sm font-bold text-red-400">
-                        {{ live.event_date || "日付未定" }}
-                    </p>
-
-                    <h1 class="mt-3 text-4xl font-black">
-                        {{ live.title || "タイトル未設定" }}
-                    </h1>
-
-                    <div class="mt-6 grid gap-4 text-zinc-300 md:grid-cols-2">
-                        <p>OPEN：{{ live.open_time || "未定" }}</p>
-                        <p>START：{{ live.start_time || "未定" }}</p>
-                        <p>会場：{{ live.live_house || "未定" }}</p>
-                        <p>出演：{{ live.artist || "未定" }}</p>
+                <div class="p-6 md:p-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="px-3 py-1 text-xs rounded-full bg-red-600">
+                            BETA
+                        </span>
                     </div>
 
-                    <div
-                        class="mt-8 rounded-2xl bg-zinc-900 p-6 leading-8 text-zinc-300"
+                    <h1
+                        class="text-3xl md:text-4xl font-bold mb-6 leading-tight"
                     >
-                        {{ live.description || "詳細情報はまだありません。" }}
+                        {{ live.title }}
+                    </h1>
+
+                    <div class="space-y-4 text-zinc-300">
+                        <div
+                            v-if="live.event_date"
+                            class="flex flex-col md:flex-row md:items-center gap-2"
+                        >
+                            <div class="w-28 text-zinc-500 font-semibold">
+                                DATE
+                            </div>
+
+                            <div>
+                                {{ formatDate(live.event_date) }}
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="live.open_time && live.open_time !== '未定'"
+                            class="flex flex-col md:flex-row md:items-center gap-2"
+                        >
+                            <div class="w-28 text-zinc-500 font-semibold">
+                                OPEN
+                            </div>
+
+                            <div>
+                                {{ live.open_time }}
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="live.start_time && live.start_time !== '未定'"
+                            class="flex flex-col md:flex-row md:items-center gap-2"
+                        >
+                            <div class="w-28 text-zinc-500 font-semibold">
+                                START
+                            </div>
+
+                            <div>
+                                {{ live.start_time }}
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="live.live_house"
+                            class="flex flex-col md:flex-row md:items-center gap-2"
+                        >
+                            <div class="w-28 text-zinc-500 font-semibold">
+                                LIVE HOUSE
+                            </div>
+
+                            <div>
+                                {{ live.live_house }}
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="live.artist"
+                            class="flex flex-col md:flex-row md:items-start gap-2"
+                        >
+                            <div class="w-28 text-zinc-500 font-semibold">
+                                ARTIST
+                            </div>
+
+                            <div class="whitespace-pre-wrap">
+                                {{ live.artist }}
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="live.description"
+                            class="flex flex-col gap-3 pt-4 border-t border-zinc-800"
+                        >
+                            <div class="text-zinc-500 font-semibold">
+                                DESCRIPTION
+                            </div>
+
+                            <div
+                                class="whitespace-pre-wrap leading-relaxed text-zinc-300"
+                            >
+                                {{ live.description }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </main>
 
-        <AppFooter />
+            <div v-else class="text-center py-20 text-zinc-500">
+                読み込み中...
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-
-import AppHeader from "../components/layout/AppHeader.vue";
-import AppFooter from "../components/layout/AppFooter.vue";
+import { RouterLink, useRoute } from "vue-router";
+import axios from "axios";
 
 const route = useRoute();
 
 const live = ref(null);
-const isLoading = ref(false);
-const errorMessage = ref("");
 
-const imageUrl = computed(() => {
-    return live.value?.image_path || "/images/hiroshima.png";
+const imageSrc = computed(() => {
+    if (!live.value) {
+        return "";
+    }
+
+    if (live.value.image_url) {
+        return live.value.image_url;
+    }
+
+    if (live.value.image_path) {
+        return live.value.image_path;
+    }
+
+    return "";
 });
 
 const fetchLive = async () => {
-    isLoading.value = true;
-    errorMessage.value = "";
-
     try {
-        const response = await fetch(`/api/lives/${route.params.id}`, {
-            headers: {
-                Accept: "application/json",
-            },
-        });
+        const response = await axios.get(`/api/lives/${route.params.id}`);
 
-        if (!response.ok) {
-            throw new Error("ライブ詳細の取得に失敗しました。");
-        }
-
-        live.value = await response.json();
+        live.value = response.data;
     } catch (error) {
-        errorMessage.value = "ライブ詳細の取得に失敗しました。";
-        live.value = null;
-    } finally {
-        isLoading.value = false;
+        console.error(error);
     }
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) {
+        return "";
+    }
+
+    return new Date(dateString).toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
 };
 
 onMounted(() => {
