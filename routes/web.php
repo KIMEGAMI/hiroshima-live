@@ -1,15 +1,9 @@
 <?php
 
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/login', function () {
-    return view('spa');
-})->name('login');
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
-Route::get('/reset-password', function () {
-    return view('spa');
-})->name('password.reset');
-
-Route::get('/{any}', function () {
-    return view('spa');
-})->where('any', '.*');
+Route::view('/{any}', 'app')
+    ->where('any', '.*');

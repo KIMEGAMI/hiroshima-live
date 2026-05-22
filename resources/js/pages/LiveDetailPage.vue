@@ -133,10 +133,14 @@
 import { computed, onMounted, ref } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import axios from "axios";
+import { setSeo } from "../utils/seo";
+import { setStructuredData } from "../utils/structuredData";
 
 const route = useRoute();
 
 const live = ref(null);
+
+const siteUrl = "https://hiroshima-live.shinji.work";
 
 const imageSrc = computed(() => {
     if (!live.value) {
@@ -154,14 +158,90 @@ const imageSrc = computed(() => {
     return "";
 });
 
+const absoluteImageUrl = computed(() => {
+    if (!imageSrc.value) {
+        return `${siteUrl}/favicon.png`;
+    }
+
+    if (imageSrc.value.startsWith("http")) {
+        return imageSrc.value;
+    }
+
+    return `${siteUrl}${imageSrc.value}`;
+});
+
 const fetchLive = async () => {
     try {
         const response = await axios.get(`/api/lives/${route.params.id}`);
 
         live.value = response.data;
+
+        setSeo({
+            title: `${live.value.title} | 広島ライブ情報 | hiroshima-live`,
+            description: createDescription(live.value),
+            url: `${siteUrl}/lives/${live.value.id}`,
+            image: absoluteImageUrl.value,
+        });
+
+        setStructuredData(createEventStructuredData(live.value));
     } catch (error) {
         console.error(error);
     }
+};
+
+const createDescription = (liveItem) => {
+    const parts = [
+        liveItem.event_date ? formatDate(liveItem.event_date) : "",
+        liveItem.live_house || "",
+        liveItem.artist || "",
+        liveItem.description || "",
+    ].filter(Boolean);
+
+    return parts.join(" / ").slice(0, 120);
+};
+
+const createEventStructuredData = (liveItem) => {
+    return {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        name: liveItem.title,
+        startDate: createStartDate(liveItem),
+        eventStatus: "https://schema.org/EventScheduled",
+        eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+        image: [absoluteImageUrl.value],
+        description: createDescription(liveItem),
+        url: `${siteUrl}/lives/${liveItem.id}`,
+        location: {
+            "@type": "Place",
+            name: liveItem.live_house || "広島ライブ会場",
+            address: {
+                "@type": "PostalAddress",
+                addressRegion: "広島県",
+                addressCountry: "JP",
+            },
+        },
+        performer: {
+            "@type": "PerformingGroup",
+            name: liveItem.artist || liveItem.title,
+        },
+        organizer: {
+            "@type": "Organization",
+            name: "hiroshima-live",
+            url: siteUrl,
+        },
+    };
+};
+
+const createStartDate = (liveItem) => {
+    if (!liveItem.event_date) {
+        return "";
+    }
+
+    if (liveItem.start_time) {
+        return `${liveItem.event_date}T${liveItem.start_time}:00+09:00`;
+    }
+
+    return `${liveItem.event_date}T00:00:00+09:00`;
 };
 
 const formatDate = (dateString) => {
