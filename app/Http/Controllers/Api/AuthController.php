@@ -24,6 +24,7 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'is_admin' => false,
         ]);
 
         Auth::login($user);
@@ -37,23 +38,29 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($validated)) {
+        if ($this->attemptAdminEnvLogin($validated['email'], $validated['password'])) {
+            return response()->json([
+                'message' => '管理者としてログインしました。',
+                'user' => Auth::user(),
+            ]);
+        }
+
+        if (! Auth::attempt([
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+        ])) {
             throw ValidationException::withMessages([
                 'email' => ['メールアドレスまたはパスワードが正しくありません。'],
-
-
-
-
-                   ]);
+            ]);
         }
 
         return response()->json([
             'message' => 'ログインしました。',
-            'user' => $request->user(),
+            'user' => Auth::user(),
         ]);
     }
 
@@ -64,5 +71,35 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'ログアウトしました。',
         ]);
+    }
+
+    private function attemptAdminEnvLogin(string $loginId, string $password): bool
+    {
+        $adminId = (string) config('services.admin_login.id', '');
+        $adminPassword = (string) config('services.admin_login.password', '');
+
+        if ($adminId === '' || $adminPassword === '') {
+            return false;
+        }
+
+        if (! hash_equals($adminId, $loginId) || ! hash_equals($adminPassword, $password)) {
+            return false;
+        }
+
+        $adminEmail = (string) config('services.admin_login.email', 'root@hiroshima-live.local');
+        $adminName = (string) config('services.admin_login.name', 'root');
+
+        $user = User::updateOrCreate(
+            ['email' => $adminEmail],
+            [
+                'name' => $adminName,
+                'password' => Hash::make($adminPassword),
+                'is_admin' => true,
+            ]
+        );
+
+        Auth::login($user);
+
+        return true;
     }
 }

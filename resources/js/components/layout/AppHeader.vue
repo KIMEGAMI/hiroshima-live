@@ -40,6 +40,14 @@
                         マイページ
                     </RouterLink>
 
+                    <RouterLink
+                        v-if="user.is_admin"
+                        to="/admin"
+                        class="rounded-full border border-purple-400/50 px-4 py-2 font-bold text-purple-200 hover:bg-purple-500/20"
+                    >
+                        管理者
+                    </RouterLink>
+
                     <button
                         type="button"
                         class="hover:text-white"

@@ -11,6 +11,7 @@ import MyPage from "../pages/MyPage.vue";
 import CalendarPage from "../pages/CalendarPage.vue";
 import ForgotPassword from "../pages/ForgotPassword.vue";
 import ResetPassword from "../pages/ResetPassword.vue";
+import AdminPage from "../pages/AdminPage.vue";
 
 const routes = [
     { path: "/", name: "home", component: TopPage },
@@ -32,6 +33,7 @@ const routes = [
     { path: "/lives/:id/edit", name: "lives.edit", component: LiveEditPage },
     { path: "/lives/:id", name: "lives.show", component: LiveDetailPage },
     { path: "/calendar", name: "calendar", component: CalendarPage },
+    { path: "/admin", name: "admin", component: AdminPage },
 ];
 
 const router = createRouter({

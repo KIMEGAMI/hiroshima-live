@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LivePostController;
 use App\Http\Controllers\Api\PasswordResetController;
@@ -27,4 +28,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my/lives', [LivePostController::class, 'myLives']);
 
     Route::post('/lives/{id}', [LivePostController::class, 'update']);
+
+    Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+        Route::get('/lives', [AdminController::class, 'lives']);
+        Route::post('/lives/{id}', [AdminController::class, 'updateLive']);
+        Route::delete('/lives/{id}', [AdminController::class, 'deleteLive']);
+    });
 });

@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'admin_login' => [
+        'id' => env('ADMIN_LOGIN_ID', ''),
+        'password' => env('ADMIN_LOGIN_PASSWORD', ''),
+        'email' => env('ADMIN_LOGIN_EMAIL', 'root@hiroshima-live.local'),
+        'name' => env('ADMIN_LOGIN_NAME', 'root'),
+    ],
+
 ];
