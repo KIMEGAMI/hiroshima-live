@@ -81,15 +81,28 @@
                         読み込み中です。
                     </div>
 
-                    <div
-                        v-else-if="lives.length > 0"
-                        class="grid gap-6 md:grid-cols-2"
-                    >
-                        <LiveCard
-                            v-for="live in lives"
-                            :key="live.id"
-                            :live="live"
-                        />
+                    <div v-else-if="lives.length > 0">
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <LiveCard
+                                v-for="live in lives"
+                                :key="live.id"
+                                :live="live"
+                            />
+                        </div>
+
+                        <div
+                            v-if="hasMoreLives"
+                            class="mt-8 rounded-3xl border border-white/10 bg-white/5 p-5 text-center text-sm text-zinc-400"
+                        >
+                            下へスクロールすると次のライブ情報を表示します。
+                        </div>
+
+                        <div
+                            v-else
+                            class="mt-8 rounded-3xl border border-white/10 bg-white/5 p-5 text-center text-sm text-zinc-500"
+                        >
+                            表示できるライブ情報は以上です。
+                        </div>
                     </div>
 
                     <div
@@ -199,7 +212,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import AppHeader from "../components/layout/AppHeader.vue";
 import AppFooter from "../components/layout/AppFooter.vue";
@@ -214,6 +227,9 @@ const lives = ref([]);
 const allLives = ref([]);
 const selectedDate = ref(null);
 const isLoading = ref(false);
+const visibleCount = ref(4);
+
+const perPage = 4;
 
 const days = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -254,8 +270,49 @@ const selectedDateLabel = computed(() => {
     return selectedDate.value.replaceAll("-", "/");
 });
 
+const displaySourceLives = computed(() => {
+    if (!selectedDate.value) {
+        return allLives.value;
+    }
+
+    return allLives.value.filter((live) => {
+        return live.event_date === selectedDate.value;
+    });
+});
+
+const hasMoreLives = computed(() => {
+    return lives.value.length < displaySourceLives.value.length;
+});
+
 const formatDate = (date) => {
     return `${currentYearMonth.value}-${String(date).padStart(2, "0")}`;
+};
+
+const refreshVisibleLives = () => {
+    lives.value = displaySourceLives.value.slice(0, visibleCount.value);
+};
+
+const resetVisibleLives = () => {
+    visibleCount.value = perPage;
+    refreshVisibleLives();
+};
+
+const loadMoreLives = () => {
+    if (isLoading.value || !hasMoreLives.value) {
+        return;
+    }
+
+    visibleCount.value += perPage;
+    refreshVisibleLives();
+};
+
+const handleScroll = () => {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const bottomPosition = document.documentElement.offsetHeight - 200;
+
+    if (scrollPosition >= bottomPosition) {
+        loadMoreLives();
+    }
 };
 
 const fetchLives = async () => {
@@ -271,7 +328,7 @@ const fetchLives = async () => {
         const data = await response.json();
 
         allLives.value = data;
-        lives.value = data.slice(0, 4);
+        resetVisibleLives();
     } catch (error) {
         allLives.value = [];
         lives.value = [];
@@ -280,28 +337,14 @@ const fetchLives = async () => {
     }
 };
 
-const selectDate = async (date) => {
+const selectDate = (date) => {
     selectedDate.value = formatDate(date);
-    isLoading.value = true;
-
-    try {
-        const response = await fetch(`/api/lives?date=${selectedDate.value}`, {
-            headers: {
-                Accept: "application/json",
-            },
-        });
-
-        lives.value = await response.json();
-    } catch (error) {
-        lives.value = [];
-    } finally {
-        isLoading.value = false;
-    }
+    resetVisibleLives();
 };
 
 const clearDate = () => {
     selectedDate.value = null;
-    lives.value = allLives.value.slice(0, 4);
+    resetVisibleLives();
 };
 
 const moveMonth = (amount) => {
@@ -326,5 +369,10 @@ const backToThisMonth = () => {
 
 onMounted(() => {
     fetchLives();
+    window.addEventListener("scroll", handleScroll);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("scroll", handleScroll);
 });
 </script>
