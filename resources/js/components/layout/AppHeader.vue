@@ -21,12 +21,14 @@
                 class="hidden items-center gap-6 text-sm text-zinc-300 md:flex"
             >
                 <RouterLink to="/" class="hover:text-white">トップ</RouterLink>
-                <RouterLink to="/lives" class="hover:text-white"
-                    >新着ライブ</RouterLink
-                >
-                <RouterLink to="/calendar" class="hover:text-white"
-                    >カレンダー</RouterLink
-                >
+
+                <RouterLink to="/lives" class="hover:text-white">
+                    新着ライブ
+                </RouterLink>
+
+                <RouterLink to="/calendar" class="hover:text-white">
+                    カレンダー
+                </RouterLink>
 
                 <template v-if="user">
                     <RouterLink
@@ -58,9 +60,10 @@
                 </template>
 
                 <template v-else>
-                    <RouterLink to="/login" class="hover:text-white"
-                        >ログイン</RouterLink
-                    >
+                    <RouterLink to="/login" class="hover:text-white">
+                        ログイン
+                    </RouterLink>
+
                     <RouterLink
                         to="/register"
                         class="rounded-full border border-white/20 px-4 py-2 font-bold hover:bg-white/10"
@@ -74,11 +77,13 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 
+const route = useRoute();
 const router = useRouter();
+
 const user = ref(null);
 
 const fetchUser = async () => {
@@ -90,6 +95,15 @@ const fetchUser = async () => {
     }
 };
 
+const handleAuthChanged = (event) => {
+    if (event.detail?.user) {
+        user.value = event.detail.user;
+        return;
+    }
+
+    fetchUser();
+};
+
 const logout = async () => {
     try {
         await axios.post("/api/logout");
@@ -98,10 +112,31 @@ const logout = async () => {
     }
 
     user.value = null;
+
+    window.dispatchEvent(
+        new CustomEvent("auth-changed", {
+            detail: {
+                user: null,
+            },
+        })
+    );
+
     router.push("/");
 };
 
+watch(
+    () => route.fullPath,
+    () => {
+        fetchUser();
+    }
+);
+
 onMounted(() => {
     fetchUser();
+    window.addEventListener("auth-changed", handleAuthChanged);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener("auth-changed", handleAuthChanged);
 });
 </script>

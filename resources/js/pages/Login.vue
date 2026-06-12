@@ -54,9 +54,10 @@
 
                     <button
                         type="submit"
-                        class="w-full rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600"
+                        class="w-full rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600 disabled:opacity-60"
+                        :disabled="isSubmitting"
                     >
-                        ログイン
+                        {{ isSubmitting ? "ログイン中..." : "ログイン" }}
                     </button>
                 </form>
             </div>
@@ -68,14 +69,13 @@
 
 <script setup>
 import { reactive, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import axios from "axios";
 
 import AppHeader from "../components/layout/AppHeader.vue";
 import AppFooter from "../components/layout/AppFooter.vue";
 
 const route = useRoute();
-const router = useRouter();
 
 const form = reactive({
     email: "",
@@ -83,9 +83,15 @@ const form = reactive({
 });
 
 const errorMessage = ref("");
+const isSubmitting = ref(false);
 
 const login = async () => {
+    if (isSubmitting.value) {
+        return;
+    }
+
     errorMessage.value = "";
+    isSubmitting.value = true;
 
     try {
         await axios.get("/sanctum/csrf-cookie");
@@ -95,9 +101,17 @@ const login = async () => {
             password: form.password,
         });
 
-        router.push(route.query.redirect || "/");
+        await axios.get("/api/user");
+
+        const redirectPath =
+            typeof route.query.redirect === "string"
+                ? route.query.redirect
+                : "/";
+
+        window.location.href = redirectPath;
     } catch (error) {
         errorMessage.value = "ログインに失敗しました。";
+        isSubmitting.value = false;
     }
 };
 </script>
