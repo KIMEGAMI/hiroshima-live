@@ -29,9 +29,12 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        $request->session()->regenerate();
+        $request->session()->save();
+
         return response()->json([
             'message' => '登録しました。',
-            'user' => $user,
+            'user' => $request->user(),
         ], 201);
     }
 
@@ -42,10 +45,10 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if ($this->attemptAdminEnvLogin($validated['email'], $validated['password'])) {
+        if ($this->attemptAdminEnvLogin($request, $validated['email'], $validated['password'])) {
             return response()->json([
                 'message' => '管理者としてログインしました。',
-                'user' => Auth::user(),
+                'user' => $request->user(),
             ]);
         }
 
@@ -58,9 +61,12 @@ class AuthController extends Controller
             ]);
         }
 
+        $request->session()->regenerate();
+        $request->session()->save();
+
         return response()->json([
             'message' => 'ログインしました。',
-            'user' => Auth::user(),
+            'user' => $request->user(),
         ]);
     }
 
@@ -68,12 +74,16 @@ class AuthController extends Controller
     {
         Auth::guard('web')->logout();
 
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        $request->session()->save();
+
         return response()->json([
             'message' => 'ログアウトしました。',
         ]);
     }
 
-    private function attemptAdminEnvLogin(string $loginId, string $password): bool
+    private function attemptAdminEnvLogin(Request $request, string $loginId, string $password): bool
     {
         $adminId = (string) config('services.admin_login.id', '');
         $adminPassword = (string) config('services.admin_login.password', '');
@@ -99,6 +109,9 @@ class AuthController extends Controller
         );
 
         Auth::login($user);
+
+        $request->session()->regenerate();
+        $request->session()->save();
 
         return true;
     }
