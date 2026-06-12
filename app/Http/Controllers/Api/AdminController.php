@@ -53,7 +53,10 @@ class AdminController extends Controller
     public function lives(): JsonResponse
     {
         $lives = LivePost::query()
-            ->with(['user:id,name,email'])
+            ->with([
+                'user:id,name,email',
+                'tags',
+            ])
             ->latest('event_date')
             ->latest('id')
             ->get();
@@ -82,7 +85,7 @@ class AdminController extends Controller
             $this->deleteStorageImage($livePost->image_path);
 
             $path = $request->file('image')->store('live_images', 'public');
-            $imagePath = '/storage/' . $path;
+            $imagePath = '/storage/'.$path;
         }
 
         $livePost->update([
@@ -96,7 +99,12 @@ class AdminController extends Controller
             'image_path' => $imagePath,
         ]);
 
-        return response()->json($livePost->fresh('user:id,name,email'));
+        return response()->json(
+            $livePost->fresh([
+                'user:id,name,email',
+                'tags',
+            ])
+        );
     }
 
     public function deleteLive(int $id): JsonResponse
