@@ -14,6 +14,7 @@ class AdminTagController extends Controller
     {
         $tags = Tag::query()
             ->withCount('livePosts')
+            ->where('name', '<>', '')
             ->orderByRaw("type = 'admin' desc")
             ->orderBy('name')
             ->get();
@@ -23,12 +24,16 @@ class AdminTagController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $request->merge([
+            'name' => $this->normalizeTagName($request->input('name')),
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50', 'unique:tags,name'],
         ]);
 
         $tag = Tag::create([
-            'name' => trim($validated['name']),
+            'name' => $validated['name'],
             'type' => 'admin',
             'created_by' => $request->user()->id,
         ]);
@@ -40,6 +45,10 @@ class AdminTagController extends Controller
     {
         $tag = Tag::findOrFail($id);
 
+        $request->merge([
+            'name' => $this->normalizeTagName($request->input('name')),
+        ]);
+
         $validated = $request->validate([
             'name' => [
                 'required',
@@ -50,7 +59,7 @@ class AdminTagController extends Controller
         ]);
 
         $tag->update([
-            'name' => trim($validated['name']),
+            'name' => $validated['name'],
         ]);
 
         return response()->json($tag);
@@ -64,5 +73,13 @@ class AdminTagController extends Controller
         return response()->json([
             'message' => 'タグを削除しました。',
         ]);
+    }
+
+    private function normalizeTagName(mixed $value): string
+    {
+        $name = (string) $value;
+        $name = preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $name);
+
+        return $name ?? '';
     }
 }

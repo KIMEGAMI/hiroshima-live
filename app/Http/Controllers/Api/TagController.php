@@ -11,6 +11,7 @@ class TagController extends Controller
     public function index(): JsonResponse
     {
         $tags = Tag::query()
+            ->where('name', '<>', '')
             ->orderByRaw("type = 'admin' desc")
             ->orderBy('name')
             ->get();

@@ -42,6 +42,8 @@ class LivePostController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->normalizeCustomTags($request);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'event_date' => ['required', 'date'],
@@ -106,6 +108,8 @@ class LivePostController extends Controller
             abort(403, 'このライブ情報を編集する権限がありません。');
         }
 
+        $this->normalizeCustomTags($request);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'event_date' => ['required', 'date'],
@@ -161,7 +165,7 @@ class LivePostController extends Controller
             ->values();
 
         $customTagIds = collect($request->input('custom_tags', []))
-            ->map(fn ($name) => trim((string) $name))
+            ->map(fn ($name) => $this->normalizeTagName($name))
             ->filter()
             ->unique()
             ->map(function ($name) use ($request) {
@@ -181,5 +185,27 @@ class LivePostController extends Controller
                 ->values()
                 ->all()
         );
+    }
+
+    private function normalizeCustomTags(Request $request): void
+    {
+        $customTags = collect($request->input('custom_tags', []))
+            ->map(fn ($name) => $this->normalizeTagName($name))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $request->merge([
+            'custom_tags' => $customTags,
+        ]);
+    }
+
+    private function normalizeTagName(mixed $value): string
+    {
+        $name = (string) $value;
+        $name = preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $name);
+
+        return $name ?? '';
     }
 }
