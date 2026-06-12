@@ -10,7 +10,7 @@
                     <h1 class="mt-2 text-4xl font-black">ライブ一覧</h1>
 
                     <p class="mt-4 text-zinc-400">
-                        広島のライブ情報を新しい順に表示しています。
+                        広島のライブ情報を検索できます。
                     </p>
                 </div>
 
@@ -21,6 +21,88 @@
                     ライブを投稿
                 </RouterLink>
             </div>
+
+            <form
+                class="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6"
+                @submit.prevent="searchLives"
+            >
+                <div class="grid gap-4 md:grid-cols-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-bold">
+                            ライブハウス名
+                        </label>
+
+                        <input
+                            v-model="filters.live_house"
+                            type="text"
+                            placeholder="例：ALMIGHTY"
+                            class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-bold">
+                            アーティスト名
+                        </label>
+
+                        <input
+                            v-model="filters.artist"
+                            type="text"
+                            placeholder="例：バンド名"
+                            class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-bold">
+                            日付
+                        </label>
+
+                        <input
+                            v-model="filters.date"
+                            type="date"
+                            class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-bold">
+                            タグ
+                        </label>
+
+                        <select
+                            v-model="filters.tag"
+                            class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                        >
+                            <option value="">すべて</option>
+                            <option
+                                v-for="tag in tags"
+                                :key="tag.id"
+                                :value="tag.name"
+                            >
+                                #{{ tag.name }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-5 flex flex-wrap gap-3">
+                    <button
+                        type="submit"
+                        class="rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600"
+                    >
+                        検索する
+                    </button>
+
+                    <button
+                        type="button"
+                        class="rounded-full border border-white/20 px-6 py-3 font-bold hover:bg-white/10"
+                        @click="resetSearch"
+                    >
+                        条件クリア
+                    </button>
+                </div>
+            </form>
 
             <div
                 v-if="selectedDate"
@@ -65,7 +147,7 @@
                 v-else
                 class="rounded-3xl border border-white/10 bg-white/5 p-8 text-zinc-400"
             >
-                ライブ情報はまだありません。
+                条件に合うライブ情報はありません。
             </div>
         </main>
 
@@ -74,18 +156,27 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { computed, onMounted, reactive, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import AppHeader from "../components/layout/AppHeader.vue";
 import AppFooter from "../components/layout/AppFooter.vue";
 import LiveCard from "../components/lives/LiveCard.vue";
 
 const route = useRoute();
+const router = useRouter();
 
 const lives = ref([]);
+const tags = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
+
+const filters = reactive({
+    live_house: "",
+    artist: "",
+    date: "",
+    tag: "",
+});
 
 const selectedDate = computed(() => {
     return route.query.date || "";
@@ -99,16 +190,59 @@ const selectedDateLabel = computed(() => {
     return selectedDate.value.replaceAll("-", "/");
 });
 
+const syncFiltersFromQuery = () => {
+    filters.live_house = route.query.live_house || "";
+    filters.artist = route.query.artist || "";
+    filters.date = route.query.date || "";
+    filters.tag = route.query.tag || "";
+};
+
+const buildQueryString = () => {
+    const params = new URLSearchParams();
+
+    if (filters.live_house) {
+        params.append("live_house", filters.live_house);
+    }
+
+    if (filters.artist) {
+        params.append("artist", filters.artist);
+    }
+
+    if (filters.date) {
+        params.append("date", filters.date);
+    }
+
+    if (filters.tag) {
+        params.append("tag", filters.tag);
+    }
+
+    const queryString = params.toString();
+
+    return queryString ? `?${queryString}` : "";
+};
+
+const fetchTags = async () => {
+    try {
+        const response = await fetch("/api/tags", {
+            headers: {
+                Accept: "application/json",
+            },
+        });
+
+        tags.value = await response.json();
+    } catch (error) {
+        tags.value = [];
+    }
+};
+
 const fetchLives = async () => {
     isLoading.value = true;
     errorMessage.value = "";
 
     try {
-        const query = selectedDate.value
-            ? `?date=${encodeURIComponent(selectedDate.value)}`
-            : "";
+        syncFiltersFromQuery();
 
-        const response = await fetch(`/api/lives${query}`, {
+        const response = await fetch(`/api/lives${buildQueryString()}`, {
             headers: {
                 Accept: "application/json",
             },
@@ -127,14 +261,39 @@ const fetchLives = async () => {
     }
 };
 
+const searchLives = () => {
+    router.push({
+        path: "/lives",
+        query: {
+            ...(filters.live_house ? { live_house: filters.live_house } : {}),
+            ...(filters.artist ? { artist: filters.artist } : {}),
+            ...(filters.date ? { date: filters.date } : {}),
+            ...(filters.tag ? { tag: filters.tag } : {}),
+        },
+    });
+};
+
+const resetSearch = () => {
+    filters.live_house = "";
+    filters.artist = "";
+    filters.date = "";
+    filters.tag = "";
+
+    router.push("/lives");
+};
+
 watch(
-    () => route.query.date,
+    () => route.query,
     () => {
         fetchLives();
     },
+    { deep: true },
 );
 
-onMounted(() => {
-    fetchLives();
+onMounted(async () => {
+    syncFiltersFromQuery();
+
+    await fetchTags();
+    await fetchLives();
 });
 </script>

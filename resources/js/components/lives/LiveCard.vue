@@ -23,6 +23,19 @@
                 {{ live.live_house }}
             </p>
 
+            <div
+                v-if="live.tags && live.tags.length > 0"
+                class="mt-3 flex flex-wrap gap-2"
+            >
+                <span
+                    v-for="tag in live.tags"
+                    :key="tag.id"
+                    class="rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-200"
+                >
+                    #{{ tag.name }}
+                </span>
+            </div>
+
             <p class="mt-3 line-clamp-2 text-sm leading-6 text-zinc-300">
                 {{ live.description }}
             </p>

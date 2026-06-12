@@ -1,10 +1,10 @@
 <template>
     <div class="min-h-screen bg-zinc-950 text-white">
-        <div class="max-w-4xl mx-auto px-4 py-10">
+        <div class="mx-auto max-w-4xl px-4 py-10">
             <div class="mb-6">
                 <RouterLink
                     to="/"
-                    class="text-sm text-zinc-400 hover:text-white transition"
+                    class="text-sm text-zinc-400 transition hover:text-white"
                 >
                     ← トップへ戻る
                 </RouterLink>
@@ -12,38 +12,51 @@
 
             <div
                 v-if="live"
-                class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl"
+                class="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-xl"
             >
                 <div
                     v-if="imageSrc"
-                    class="w-full bg-black flex items-center justify-center p-4"
+                    class="flex w-full items-center justify-center bg-black p-4"
                 >
                     <img
                         :src="imageSrc"
                         :alt="live.title"
-                        class="max-w-full max-h-[70vh] object-contain rounded-xl"
+                        class="max-h-[70vh] max-w-full rounded-xl object-contain"
                     />
                 </div>
 
                 <div class="p-6 md:p-8">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="px-3 py-1 text-xs rounded-full bg-red-600">
+                    <div class="mb-4 flex items-center gap-2">
+                        <span class="rounded-full bg-red-600 px-3 py-1 text-xs">
                             BETA
                         </span>
                     </div>
 
                     <h1
-                        class="text-3xl md:text-4xl font-bold mb-6 leading-tight"
+                        class="mb-6 text-3xl font-bold leading-tight md:text-4xl"
                     >
                         {{ live.title }}
                     </h1>
 
+                    <div
+                        v-if="live.tags && live.tags.length > 0"
+                        class="mb-6 flex flex-wrap gap-2"
+                    >
+                        <span
+                            v-for="tag in live.tags"
+                            :key="tag.id"
+                            class="rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-200"
+                        >
+                            #{{ tag.name }}
+                        </span>
+                    </div>
+
                     <div class="space-y-4 text-zinc-300">
                         <div
                             v-if="live.event_date"
-                            class="flex flex-col md:flex-row md:items-center gap-2"
+                            class="flex flex-col gap-2 md:flex-row md:items-center"
                         >
-                            <div class="w-28 text-zinc-500 font-semibold">
+                            <div class="w-28 font-semibold text-zinc-500">
                                 DATE
                             </div>
 
@@ -54,9 +67,9 @@
 
                         <div
                             v-if="live.open_time && live.open_time !== '未定'"
-                            class="flex flex-col md:flex-row md:items-center gap-2"
+                            class="flex flex-col gap-2 md:flex-row md:items-center"
                         >
-                            <div class="w-28 text-zinc-500 font-semibold">
+                            <div class="w-28 font-semibold text-zinc-500">
                                 OPEN
                             </div>
 
@@ -67,9 +80,9 @@
 
                         <div
                             v-if="live.start_time && live.start_time !== '未定'"
-                            class="flex flex-col md:flex-row md:items-center gap-2"
+                            class="flex flex-col gap-2 md:flex-row md:items-center"
                         >
-                            <div class="w-28 text-zinc-500 font-semibold">
+                            <div class="w-28 font-semibold text-zinc-500">
                                 START
                             </div>
 
@@ -80,9 +93,9 @@
 
                         <div
                             v-if="live.live_house"
-                            class="flex flex-col md:flex-row md:items-center gap-2"
+                            class="flex flex-col gap-2 md:flex-row md:items-center"
                         >
-                            <div class="w-28 text-zinc-500 font-semibold">
+                            <div class="w-28 font-semibold text-zinc-500">
                                 LIVE HOUSE
                             </div>
 
@@ -93,9 +106,9 @@
 
                         <div
                             v-if="live.artist"
-                            class="flex flex-col md:flex-row md:items-start gap-2"
+                            class="flex flex-col gap-2 md:flex-row md:items-start"
                         >
-                            <div class="w-28 text-zinc-500 font-semibold">
+                            <div class="w-28 font-semibold text-zinc-500">
                                 ARTIST
                             </div>
 
@@ -106,9 +119,9 @@
 
                         <div
                             v-if="live.description"
-                            class="flex flex-col gap-3 pt-4 border-t border-zinc-800"
+                            class="flex flex-col gap-3 border-t border-zinc-800 pt-4"
                         >
-                            <div class="text-zinc-500 font-semibold">
+                            <div class="font-semibold text-zinc-500">
                                 DESCRIPTION
                             </div>
 
@@ -122,7 +135,7 @@
                 </div>
             </div>
 
-            <div v-else class="text-center py-20 text-zinc-500">
+            <div v-else class="py-20 text-center text-zinc-500">
                 読み込み中...
             </div>
         </div>

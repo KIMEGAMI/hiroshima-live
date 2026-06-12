@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\LivePost;
+use App\Models\Tag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,10 +13,25 @@ class LivePostController extends Controller
 {
     public function index(Request $request)
     {
-        $query = LivePost::query();
+        $query = LivePost::query()
+            ->with('tags');
 
         if ($request->filled('date')) {
             $query->whereDate('event_date', $request->date);
+        }
+
+        if ($request->filled('live_house')) {
+            $query->where('live_house', 'like', '%'.$request->live_house.'%');
+        }
+
+        if ($request->filled('artist')) {
+            $query->where('artist', 'like', '%'.$request->artist.'%');
+        }
+
+        if ($request->filled('tag')) {
+            $query->whereHas('tags', function ($tagQuery) use ($request) {
+                $tagQuery->where('tags.name', $request->tag);
+            });
         }
 
         return $query
@@ -35,13 +51,17 @@ class LivePostController extends Controller
             'artist' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
+            'custom_tags' => ['nullable', 'array'],
+            'custom_tags.*' => ['nullable', 'string', 'max:50'],
         ]);
 
         $imagePath = '/images/hiroshima.png';
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('live_images', 'public');
-            $imagePath = '/storage/' . $path;
+            $imagePath = '/storage/'.$path;
         }
 
         $livePost = LivePost::create([
@@ -56,17 +76,22 @@ class LivePostController extends Controller
             'image_path' => $imagePath,
         ]);
 
-        return response()->json($livePost, 201);
+        $this->syncTags($request, $livePost);
+
+        return response()->json($livePost->load('tags'), 201);
     }
 
     public function show($id)
     {
-        return LivePost::findOrFail($id);
+        return LivePost::query()
+            ->with('tags')
+            ->findOrFail($id);
     }
 
     public function myLives(Request $request)
     {
         return LivePost::query()
+            ->with('tags')
             ->where('user_id', $request->user()->id)
             ->latest('event_date')
             ->latest('id')
@@ -90,6 +115,10 @@ class LivePostController extends Controller
             'artist' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
+            'custom_tags' => ['nullable', 'array'],
+            'custom_tags.*' => ['nullable', 'string', 'max:50'],
         ]);
 
         $imagePath = $livePost->image_path;
@@ -104,7 +133,7 @@ class LivePostController extends Controller
             }
 
             $path = $request->file('image')->store('live_images', 'public');
-            $imagePath = '/storage/' . $path;
+            $imagePath = '/storage/'.$path;
         }
 
         $livePost->update([
@@ -118,6 +147,39 @@ class LivePostController extends Controller
             'image_path' => $imagePath,
         ]);
 
-        return response()->json($livePost);
+        $this->syncTags($request, $livePost);
+
+        return response()->json($livePost->load('tags'));
+    }
+
+    private function syncTags(Request $request, LivePost $livePost): void
+    {
+        $tagIds = collect($request->input('tag_ids', []))
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        $customTagIds = collect($request->input('custom_tags', []))
+            ->map(fn ($name) => trim((string) $name))
+            ->filter()
+            ->unique()
+            ->map(function ($name) use ($request) {
+                return Tag::firstOrCreate(
+                    ['name' => $name],
+                    [
+                        'type' => 'user',
+                        'created_by' => $request->user()->id,
+                    ]
+                )->id;
+            });
+
+        $livePost->tags()->sync(
+            $tagIds
+                ->merge($customTagIds)
+                ->unique()
+                ->values()
+                ->all()
+        );
     }
 }
