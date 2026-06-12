@@ -161,6 +161,7 @@ class LivePostController extends Controller
         $tagIds = collect($request->input('tag_ids', []))
             ->filter()
             ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
             ->unique()
             ->values();
 
