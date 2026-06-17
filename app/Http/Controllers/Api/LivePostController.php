@@ -16,6 +16,21 @@ class LivePostController extends Controller
         $query = LivePost::query()
             ->with('tags');
 
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+
+            $query->where(function ($keywordQuery) use ($keyword) {
+                $keywordQuery
+                    ->where('title', 'like', '%'.$keyword.'%')
+                    ->orWhere('live_house', 'like', '%'.$keyword.'%')
+                    ->orWhere('artist', 'like', '%'.$keyword.'%')
+                    ->orWhere('description', 'like', '%'.$keyword.'%')
+                    ->orWhereHas('tags', function ($tagQuery) use ($keyword) {
+                        $tagQuery->where('tags.name', 'like', '%'.$keyword.'%');
+                    });
+            });
+        }
+
         if ($request->filled('date')) {
             $query->whereDate('event_date', $request->date);
         }
@@ -34,8 +49,12 @@ class LivePostController extends Controller
             });
         }
 
+        if ($request->boolean('future')) {
+            $query->whereDate('event_date', '>=', now()->toDateString());
+        }
+
         return $query
-            ->latest('event_date')
+            ->orderBy('event_date')
             ->latest('id')
             ->get();
     }

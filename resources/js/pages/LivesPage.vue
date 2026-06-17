@@ -26,7 +26,20 @@
                 class="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6"
                 @submit.prevent="searchLives"
             >
-                <div class="grid gap-4 md:grid-cols-4">
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div class="md:col-span-3">
+                        <label class="mb-2 block text-sm font-bold">
+                            キーワード
+                        </label>
+
+                        <input
+                            v-model="filters.keyword"
+                            type="text"
+                            placeholder="タイトル、説明、会場、アーティスト、タグをまとめて検索"
+                            class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                        />
+                    </div>
+
                     <div>
                         <label class="mb-2 block text-sm font-bold">
                             ライブハウス名
@@ -83,6 +96,22 @@
                                 #{{ tag.name }}
                             </option>
                         </select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <label
+                            class="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                        >
+                            <input
+                                v-model="filters.future"
+                                type="checkbox"
+                                class="h-5 w-5 rounded border-white/20 bg-zinc-900"
+                            />
+
+                            <span class="text-sm font-bold">
+                                今後のライブのみ
+                            </span>
+                        </label>
                     </div>
                 </div>
 
@@ -172,10 +201,12 @@ const isLoading = ref(false);
 const errorMessage = ref("");
 
 const filters = reactive({
+    keyword: "",
     live_house: "",
     artist: "",
     date: "",
     tag: "",
+    future: false,
 });
 
 const selectedDate = computed(() => {
@@ -191,14 +222,20 @@ const selectedDateLabel = computed(() => {
 });
 
 const syncFiltersFromQuery = () => {
+    filters.keyword = route.query.keyword || "";
     filters.live_house = route.query.live_house || "";
     filters.artist = route.query.artist || "";
     filters.date = route.query.date || "";
     filters.tag = route.query.tag || "";
+    filters.future = route.query.future === "1";
 };
 
 const buildQueryString = () => {
     const params = new URLSearchParams();
+
+    if (filters.keyword) {
+        params.append("keyword", filters.keyword);
+    }
 
     if (filters.live_house) {
         params.append("live_house", filters.live_house);
@@ -214,6 +251,10 @@ const buildQueryString = () => {
 
     if (filters.tag) {
         params.append("tag", filters.tag);
+    }
+
+    if (filters.future) {
+        params.append("future", "1");
     }
 
     const queryString = params.toString();
@@ -265,19 +306,23 @@ const searchLives = () => {
     router.push({
         path: "/lives",
         query: {
+            ...(filters.keyword ? { keyword: filters.keyword } : {}),
             ...(filters.live_house ? { live_house: filters.live_house } : {}),
             ...(filters.artist ? { artist: filters.artist } : {}),
             ...(filters.date ? { date: filters.date } : {}),
             ...(filters.tag ? { tag: filters.tag } : {}),
+            ...(filters.future ? { future: "1" } : {}),
         },
     });
 };
 
 const resetSearch = () => {
+    filters.keyword = "";
     filters.live_house = "";
     filters.artist = "";
     filters.date = "";
     filters.tag = "";
+    filters.future = false;
 
     router.push("/lives");
 };
