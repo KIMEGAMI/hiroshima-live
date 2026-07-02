@@ -1,24 +1,32 @@
+export const SITE_URL = "https://hiroshima-live.shinji.work";
+export const SITE_NAME = "hiroshima-live";
+export const DEFAULT_IMAGE = `${SITE_URL}/favicon.png`;
+export const DEFAULT_TITLE = "広島ライブ情報 | hiroshima-live";
+export const DEFAULT_DESCRIPTION =
+    "hiroshima-liveは、広島のライブ情報・ライブハウス情報を探せるライブ情報サイトです。";
+
 export const setSeo = ({
-    title = "広島ライブ情報 | hiroshima-live",
-    description = "hiroshima-liveは、広島のライブ情報・ライブハウス情報を探せるライブ情報サイトです。",
-    url = "https://hiroshima-live.shinji.work/",
-    image = "https://hiroshima-live.shinji.work/favicon.png",
+    title = DEFAULT_TITLE,
+    description = DEFAULT_DESCRIPTION,
+    url = `${SITE_URL}/`,
+    image = DEFAULT_IMAGE,
     robots = "index, follow",
+    type = "website",
 } = {}) => {
     document.title = title;
 
     setMeta("description", description);
     setMeta("robots", robots);
 
-    setProperty("og:site_name", "hiroshima-live");
-    setProperty("og:type", "website");
+    setProperty("og:site_name", SITE_NAME);
+    setProperty("og:type", type);
     setProperty("og:title", title);
     setProperty("og:description", description);
     setProperty("og:url", url);
     setProperty("og:image", image);
     setProperty("og:locale", "ja_JP");
 
-    setMeta("twitter:card", "summary");
+    setMeta("twitter:card", "summary_large_image");
     setMeta("twitter:title", title);
     setMeta("twitter:description", description);
     setMeta("twitter:image", image);

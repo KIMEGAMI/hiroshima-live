@@ -8,19 +8,19 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>広島ライブ情報 | hiroshima-live</title>
+    <title>{{ $seo['title'] }}</title>
 
     <meta
         name="description"
-        content="hiroshima-liveは、広島のライブ情報・ライブハウス情報を探せるライブ情報サイトです。"
+        content="{{ $seo['description'] }}"
     >
 
     <meta
         name="keywords"
-        content="広島ライブ,広島ライブハウス,ライブ情報,音楽イベント,hiroshima-live"
+        content="{{ $seo['keywords'] }}"
     >
 
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{{ $seo['robots'] }}">
 
     <meta
         name="google-site-verification"
@@ -28,21 +28,21 @@
     >
 
     <meta property="og:site_name" content="hiroshima-live">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="広島ライブ情報 | hiroshima-live">
-    <meta property="og:description" content="hiroshima-liveは、広島のライブ情報・ライブハウス情報を探せるライブ情報サイトです。">
-    <meta property="og:url" content="https://hiroshima-live.shinji.work/">
-    <meta property="og:image" content="https://hiroshima-live.shinji.work/favicon.png">
+    <meta property="og:type" content="{{ $seo['type'] }}">
+    <meta property="og:title" content="{{ $seo['title'] }}">
+    <meta property="og:description" content="{{ $seo['description'] }}">
+    <meta property="og:url" content="{{ $seo['url'] }}">
+    <meta property="og:image" content="{{ $seo['image'] }}">
     <meta property="og:locale" content="ja_JP">
 
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="広島ライブ情報 | hiroshima-live">
-    <meta name="twitter:description" content="hiroshima-liveは、広島のライブ情報・ライブハウス情報を探せるライブ情報サイトです。">
-    <meta name="twitter:image" content="https://hiroshima-live.shinji.work/favicon.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seo['title'] }}">
+    <meta name="twitter:description" content="{{ $seo['description'] }}">
+    <meta name="twitter:image" content="{{ $seo['image'] }}">
 
     <link
         rel="canonical"
-        href="https://hiroshima-live.shinji.work/"
+        href="{{ $seo['url'] }}"
     >
 
     <link
@@ -55,6 +55,10 @@
         rel="apple-touch-icon"
         href="/favicon.png"
     >
+
+    <script type="application/ld+json">
+        {!! json_encode($seo['structuredData'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+    </script>
 
     @vite('resources/js/app.js')
 </head>

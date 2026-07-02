@@ -4,10 +4,41 @@ import "../css/app.css";
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
-import { setSeo } from "./utils/seo";
+import { DEFAULT_IMAGE, SITE_URL, setSeo } from "./utils/seo";
 import { removeStructuredData } from "./utils/structuredData";
 
 const app = createApp(App);
+
+const privateRoutes = new Map([
+    [
+        "/login",
+        {
+            title: "ログイン | hiroshima-live",
+            description: "hiroshima-liveのログインページです。",
+        },
+    ],
+    [
+        "/register",
+        {
+            title: "新規登録 | hiroshima-live",
+            description: "hiroshima-liveの新規登録ページです。",
+        },
+    ],
+    [
+        "/forgot-password",
+        {
+            title: "パスワード再設定 | hiroshima-live",
+            description: "hiroshima-liveのパスワード再設定ページです。",
+        },
+    ],
+    [
+        "/reset-password",
+        {
+            title: "パスワード再設定 | hiroshima-live",
+            description: "hiroshima-liveのパスワード再設定ページです。",
+        },
+    ],
+]);
 
 router.afterEach((to) => {
     if (!to.path.startsWith("/lives/")) {
@@ -19,9 +50,8 @@ router.afterEach((to) => {
             title: "広島ライブ情報 | hiroshima-live",
             description:
                 "hiroshima-liveは、広島のライブ情報・ライブハウス情報を探せるライブ情報サイトです。",
-            url: "https://hiroshima-live.shinji.work/",
-            image: "https://hiroshima-live.shinji.work/favicon.png",
-            robots: "index, follow",
+            url: `${SITE_URL}/`,
+            image: DEFAULT_IMAGE,
         });
 
         return;
@@ -32,32 +62,20 @@ router.afterEach((to) => {
             title: "ライブ一覧 | 広島ライブ情報 | hiroshima-live",
             description:
                 "広島で開催されるライブ情報・音楽イベント情報を一覧で探せます。",
-            url: "https://hiroshima-live.shinji.work/lives",
-            image: "https://hiroshima-live.shinji.work/favicon.png",
-            robots: "index, follow",
+            url: `${SITE_URL}/lives`,
+            image: DEFAULT_IMAGE,
         });
 
         return;
     }
 
-    if (to.path === "/login") {
-        setSeo({
-            title: "ログイン | hiroshima-live",
-            description: "hiroshima-liveのログインページです。",
-            url: "https://hiroshima-live.shinji.work/login",
-            image: "https://hiroshima-live.shinji.work/favicon.png",
-            robots: "noindex, nofollow",
-        });
+    if (privateRoutes.has(to.path)) {
+        const seo = privateRoutes.get(to.path);
 
-        return;
-    }
-
-    if (to.path === "/register") {
         setSeo({
-            title: "新規登録 | hiroshima-live",
-            description: "hiroshima-liveの新規登録ページです。",
-            url: "https://hiroshima-live.shinji.work/register",
-            image: "https://hiroshima-live.shinji.work/favicon.png",
+            ...seo,
+            url: `${SITE_URL}${to.path}`,
+            image: DEFAULT_IMAGE,
             robots: "noindex, nofollow",
         });
 
@@ -65,7 +83,9 @@ router.afterEach((to) => {
     }
 
     if (!to.path.startsWith("/lives/")) {
-        setSeo();
+        setSeo({
+            url: `${SITE_URL}${to.path}`,
+        });
     }
 });
 

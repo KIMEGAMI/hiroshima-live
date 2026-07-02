@@ -15,12 +15,20 @@ class SitemapController extends Controller
             [
                 'loc' => $baseUrl . '/',
                 'lastmod' => now()->toDateString(),
+                'changefreq' => 'daily',
                 'priority' => '1.0',
             ],
             [
                 'loc' => $baseUrl . '/lives',
                 'lastmod' => now()->toDateString(),
+                'changefreq' => 'daily',
                 'priority' => '0.9',
+            ],
+            [
+                'loc' => $baseUrl . '/calendar',
+                'lastmod' => now()->toDateString(),
+                'changefreq' => 'daily',
+                'priority' => '0.8',
             ],
         ];
 
@@ -34,6 +42,7 @@ class SitemapController extends Controller
                     'lastmod' => $live->updated_at
                         ? date('Y-m-d', strtotime($live->updated_at))
                         : now()->toDateString(),
+                    'changefreq' => 'weekly',
                     'priority' => '0.8',
                 ];
             })

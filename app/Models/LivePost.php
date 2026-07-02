@@ -18,6 +18,10 @@ class LivePost extends Model
         'image_path',
     ];
 
+    protected $casts = [
+        'event_date' => 'date',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

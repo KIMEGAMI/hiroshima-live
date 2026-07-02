@@ -146,14 +146,14 @@
 import { computed, onMounted, ref } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import axios from "axios";
-import { setSeo } from "../utils/seo";
+import { DEFAULT_IMAGE, SITE_URL, setSeo } from "../utils/seo";
 import { setStructuredData } from "../utils/structuredData";
 
 const route = useRoute();
 
 const live = ref(null);
 
-const siteUrl = "https://hiroshima-live.shinji.work";
+const siteUrl = SITE_URL;
 
 const imageSrc = computed(() => {
     if (!live.value) {
@@ -173,7 +173,7 @@ const imageSrc = computed(() => {
 
 const absoluteImageUrl = computed(() => {
     if (!imageSrc.value) {
-        return `${siteUrl}/favicon.png`;
+        return DEFAULT_IMAGE;
     }
 
     if (imageSrc.value.startsWith("http")) {
@@ -194,6 +194,7 @@ const fetchLive = async () => {
             description: createDescription(live.value),
             url: `${siteUrl}/lives/${live.value.id}`,
             image: absoluteImageUrl.value,
+            type: "article",
         });
 
         setStructuredData(createEventStructuredData(live.value));
@@ -250,8 +251,13 @@ const createStartDate = (liveItem) => {
         return "";
     }
 
-    if (liveItem.start_time) {
-        return `${liveItem.event_date}T${liveItem.start_time}:00+09:00`;
+    if (/^\d{2}:\d{2}(:\d{2})?$/.test(liveItem.start_time || "")) {
+        const startTime =
+            liveItem.start_time.length === 5
+                ? `${liveItem.start_time}:00`
+                : liveItem.start_time;
+
+        return `${liveItem.event_date}T${startTime}+09:00`;
     }
 
     return `${liveItem.event_date}T00:00:00+09:00`;
