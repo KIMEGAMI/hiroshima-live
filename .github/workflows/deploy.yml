@@ -56,7 +56,7 @@ jobs:
         run: npm run build
 
       - name: Create release archive
-        run: tar --exclude='.git' --exclude='node_modules' --exclude='vendor' -czf release.tar.gz .
+        run: tar --exclude='.git' --exclude='node_modules' --exclude='vendor' -czf /tmp/release.tar.gz .
 
       - name: Configure SSH
         env:
@@ -82,7 +82,7 @@ jobs:
           test -n "$DEPLOY_HOST"
           test -n "$DEPLOY_PATH"
           ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/releases' '$DEPLOY_PATH/shared/storage'"
-          scp -i ~/.ssh/deploy_key release.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/release.tar.gz"
+          scp -i ~/.ssh/deploy_key /tmp/release.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/release.tar.gz"
 
       - name: Activate release
         env:
