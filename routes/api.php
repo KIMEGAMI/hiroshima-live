@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AdminTagController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LivePostController;
+use App\Http\Controllers\Api\LiveSubmissionController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\TagController;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/lives', [LivePostController::class, 'index']);
 Route::get('/lives/{id}', [LivePostController::class, 'show']);
+Route::post('/lives', [LivePostController::class, 'store']);
+Route::post('/live-submissions', [LiveSubmissionController::class, 'store']);
 
 Route::get('/tags', [TagController::class, 'index']);
 
@@ -26,8 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/logout', [AuthController::class, 'logout']);
-
-    Route::post('/lives', [LivePostController::class, 'store']);
+    Route::delete('/user', [AuthController::class, 'destroyAccount']);
 
     Route::get('/my/lives', [LivePostController::class, 'myLives']);
 

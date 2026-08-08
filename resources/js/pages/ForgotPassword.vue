@@ -23,9 +23,10 @@
 
                     <button
                         type="submit"
-                        class="w-full rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600"
+                        class="w-full rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600 disabled:opacity-60"
+                        :disabled="isSubmitting"
                     >
-                        再設定メールを送信
+                        {{ isSubmitting ? "送信中..." : "再設定メールを送信" }}
                     </button>
                 </form>
 
@@ -54,29 +55,39 @@ import { ref } from "vue";
 const email = ref("");
 const message = ref("");
 const error = ref("");
+const isSubmitting = ref(false);
 
 const submit = async () => {
-    message.value = "";
-    error.value = "";
-
-    const response = await fetch("/api/forgot-password", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-        },
-        body: JSON.stringify({
-            email: email.value,
-        }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        error.value = data.message || "メール送信に失敗しました。";
+    if (isSubmitting.value) {
         return;
     }
 
-    message.value = data.message;
+    message.value = "";
+    error.value = "";
+    isSubmitting.value = true;
+
+    try {
+        const response = await fetch("/api/forgot-password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: JSON.stringify({
+                email: email.value,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            error.value = data.message || "メール送信に失敗しました。";
+            return;
+        }
+
+        message.value = data.message;
+    } finally {
+        isSubmitting.value = false;
+    }
 };
 </script>

@@ -43,9 +43,10 @@
 
                     <button
                         type="submit"
-                        class="w-full rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600"
+                        class="w-full rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600 disabled:opacity-60"
+                        :disabled="isSubmitting"
                     >
-                        パスワードを変更
+                        {{ isSubmitting ? "変更中..." : "パスワードを変更" }}
                     </button>
                 </form>
 
@@ -74,41 +75,60 @@ const password = ref("");
 const passwordConfirmation = ref("");
 const message = ref("");
 const error = ref("");
+const isSubmitting = ref(false);
+const redirectDelayMs = 1200;
+
+const getQueryString = (value) => {
+    if (Array.isArray(value)) {
+        return value[0] || "";
+    }
+
+    return typeof value === "string" ? value : "";
+};
 
 onMounted(() => {
-    token.value = route.query.token || "";
-    email.value = route.query.email || "";
+    token.value = getQueryString(route.query.token);
+    email.value = getQueryString(route.query.email);
 });
 
 const submit = async () => {
-    message.value = "";
-    error.value = "";
-
-    const response = await fetch("/api/reset-password", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-        },
-        body: JSON.stringify({
-            token: token.value,
-            email: email.value,
-            password: password.value,
-            password_confirmation: passwordConfirmation.value,
-        }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        error.value = data.message || "パスワード変更に失敗しました。";
+    if (isSubmitting.value) {
         return;
     }
 
-    message.value = data.message;
+    message.value = "";
+    error.value = "";
+    isSubmitting.value = true;
 
-    setTimeout(() => {
-        router.push("/login");
-    }, 1200);
+    try {
+        const response = await fetch("/api/reset-password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: JSON.stringify({
+                token: token.value,
+                email: email.value,
+                password: password.value,
+                password_confirmation: passwordConfirmation.value,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            error.value = data.message || "パスワード変更に失敗しました。";
+            return;
+        }
+
+        message.value = data.message;
+
+        setTimeout(() => {
+            router.push("/login");
+        }, redirectDelayMs);
+    } finally {
+        isSubmitting.value = false;
+    }
 };
 </script>

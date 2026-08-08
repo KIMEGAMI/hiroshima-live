@@ -17,16 +17,20 @@ class PasswordResetController extends Controller
     public function sendResetLinkEmail(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', 'max:255'],
         ]);
 
         $status = Password::sendResetLink(
             $request->only('email')
         );
 
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'パスワード再設定メールを送信しました。'])
-            : response()->json(['message' => 'メール送信に失敗しました。'], 422);
+        if (in_array($status, [Password::RESET_LINK_SENT, Password::INVALID_USER], true)) {
+            return response()->json([
+                'message' => '登録済みのメールアドレスの場合、パスワード再設定メールを送信しました。',
+            ]);
+        }
+
+        return response()->json(['message' => 'しばらく時間をおいてから再度お試しください。'], 422);
     }
 
     public function reset(Request $request): JsonResponse
