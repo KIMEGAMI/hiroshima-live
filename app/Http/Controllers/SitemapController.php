@@ -9,7 +9,7 @@ class SitemapController extends Controller
 {
     public function index(): Response
     {
-        $baseUrl = 'https://hiroshima-live.shinji.work';
+        $baseUrl = rtrim((string) config('app.url'), '/');
 
         $staticUrls = [
             [

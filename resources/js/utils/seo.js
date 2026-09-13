@@ -1,4 +1,18 @@
-export const SITE_URL = "https://hiroshima-live.shinji.work";
+const resolveSiteUrl = () => {
+    const configuredUrl = import.meta.env.VITE_SITE_URL;
+
+    if (configuredUrl) {
+        return configuredUrl.replace(/\/$/, "");
+    }
+
+    if (typeof window !== "undefined" && window.location?.origin) {
+        return window.location.origin;
+    }
+
+    return "https://hiroshima-live.kimegami.jp";
+};
+
+export const SITE_URL = resolveSiteUrl();
 export const SITE_NAME = "hiroshima-live";
 export const DEFAULT_IMAGE = `${SITE_URL}/favicon.png`;
 export const DEFAULT_TITLE = "広島ライブ情報 | hiroshima-live";

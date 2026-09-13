@@ -9,7 +9,7 @@ class SpaController extends Controller
 {
     public function show(?string $any = null): View
     {
-        $baseUrl = 'https://hiroshima-live.shinji.work';
+        $baseUrl = rtrim((string) config('app.url'), '/');
         $path = '/' . ltrim($any ?? '', '/');
         $currentUrl = $baseUrl . ($path === '/' ? '/' : $path);
         $defaultImage = $baseUrl . '/favicon.png';
