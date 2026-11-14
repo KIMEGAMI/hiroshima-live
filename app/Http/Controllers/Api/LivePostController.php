@@ -86,7 +86,7 @@ class LivePostController extends Controller
         }
 
         $livePost = LivePost::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $request->user()?->id,
             'title' => $validated['title'],
             'event_date' => $validated['event_date'],
             'open_time' => $validated['open_time'] ?? null,
@@ -193,7 +193,7 @@ class LivePostController extends Controller
                     ['name' => $name],
                     [
                         'type' => 'user',
-                        'created_by' => $request->user()->id,
+                        'created_by' => $request->user()?->id,
                     ]
                 )->id;
             });

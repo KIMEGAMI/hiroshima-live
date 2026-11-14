@@ -36,7 +36,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.4"
+          php-version: "8.5"
           extensions: dom, curl, libxml, mbstring, zip, pcntl
           coverage: none
 
@@ -48,6 +48,9 @@ jobs:
 
       - name: Install PHP dependencies
         run: composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Audit production dependencies
+        run: composer audit --no-dev --format=summary
 
       - name: Install Node dependencies
         run: npm ci --ignore-scripts

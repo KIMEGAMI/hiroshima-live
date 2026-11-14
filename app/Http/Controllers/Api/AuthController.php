@@ -18,6 +18,11 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:257', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'terms_accepted' => ['accepted'],
+            'privacy_policy_accepted' => ['accepted'],
+        ], [
+            'terms_accepted.accepted' => '利用規約への同意が必要です。',
+            'privacy_policy_accepted.accepted' => 'プライバシーポリシーへの同意が必要です。',
         ]);
 
         $user = User::create([
@@ -29,8 +34,10 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        $request->session()->regenerate();
-        $request->session()->save();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+            $request->session()->save();
+        }
 
         return response()->json([
             'message' => '登録しました。',
@@ -74,12 +81,46 @@ class AuthController extends Controller
     {
         Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        $request->session()->save();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            $request->session()->save();
+        }
 
         return response()->json([
             'message' => 'ログアウトしました。',
+        ]);
+    }
+
+    public function destroyAccount(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($validated['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['パスワードが正しくありません。'],
+            ]);
+        }
+
+        $user->tokens()->delete();
+
+        Auth::guard('web')->logout();
+
+        $user->delete();
+        Auth::forgetGuards();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            $request->session()->save();
+        }
+
+        return response()->json([
+            'message' => 'アカウントを削除しました。',
         ]);
     }
 
@@ -110,8 +151,10 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        $request->session()->regenerate();
-        $request->session()->save();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+            $request->session()->save();
+        }
 
         return true;
     }

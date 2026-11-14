@@ -23,9 +23,28 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'terms_accepted' => '1',
+            'privacy_policy_accepted' => '1',
         ]);
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_new_users_must_accept_terms_and_privacy_policy(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'terms_accepted',
+            'privacy_policy_accepted',
+        ]);
+
+        $this->assertGuest();
     }
 }

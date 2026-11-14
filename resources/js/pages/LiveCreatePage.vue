@@ -16,28 +16,32 @@
                 認証確認中...
             </div>
 
-            <div
-                v-else-if="!user"
-                class="rounded-3xl border border-red-500/30 bg-red-500/10 p-8"
-            >
-                <p class="text-lg font-bold">ログインが必要です</p>
-
-                <RouterLink
-                    :to="{
-                        path: '/login',
-                        query: { redirect: '/lives/create' },
-                    }"
-                    class="mt-5 inline-block rounded-full bg-red-500 px-5 py-3 font-bold hover:bg-red-600"
-                >
-                    ログインへ
-                </RouterLink>
-            </div>
-
             <form
                 v-else
                 @submit.prevent="submit"
                 class="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-8"
             >
+                <div
+                    v-if="!user"
+                    class="rounded-2xl border border-red-500/30 bg-red-500/10 p-5"
+                >
+                    <p class="font-bold">ログインなしで投稿できます</p>
+
+                    <p class="mt-2 text-sm leading-6 text-zinc-300">
+                        投稿するとすぐに公開されます。あとから内容を修正・管理する場合はログインが必要です。
+                    </p>
+
+                    <RouterLink
+                        :to="{
+                            path: '/login',
+                            query: { redirect: '/lives/create' },
+                        }"
+                        class="mt-4 inline-block text-sm font-bold text-red-300 hover:text-red-200"
+                    >
+                        ログインして投稿する
+                    </RouterLink>
+                </div>
+
                 <div>
                     <label class="mb-2 block text-sm font-bold">
                         タイトル
@@ -60,6 +64,32 @@
                         class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
                         required
                     />
+                </div>
+
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-bold">
+                            開場時間
+                        </label>
+
+                        <input
+                            v-model="form.open_time"
+                            type="time"
+                            class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-bold">
+                            開演時間
+                        </label>
+
+                        <input
+                            v-model="form.start_time"
+                        type="time"
+                        class="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3"
+                    />
+                    </div>
                 </div>
 
                 <div>
@@ -189,10 +219,15 @@
 
                 <button
                     type="submit"
-                    class="rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600"
+                    class="rounded-full bg-red-500 px-6 py-3 font-bold hover:bg-red-600 disabled:opacity-60"
+                    :disabled="isSubmitting"
                 >
-                    投稿する
+                    {{ isSubmitting ? "投稿中..." : "投稿する" }}
                 </button>
+
+                <p v-if="errorMessage" class="text-sm text-red-400">
+                    {{ errorMessage }}
+                </p>
             </form>
         </main>
 
@@ -216,10 +251,14 @@ const tags = ref([]);
 const selectedTagIds = ref([]);
 const customTagInput = ref("");
 const customTags = ref([]);
+const isSubmitting = ref(false);
+const errorMessage = ref("");
 
 const form = reactive({
     title: "",
     event_date: "",
+    open_time: "",
+    start_time: "",
     live_house: "",
     artist: "",
     description: "",
@@ -285,6 +324,13 @@ const handleImage = (event) => {
 };
 
 const submit = async () => {
+    if (isSubmitting.value) {
+        return;
+    }
+
+    isSubmitting.value = true;
+    errorMessage.value = "";
+
     try {
         await axios.get("/sanctum/csrf-cookie");
 
@@ -292,6 +338,8 @@ const submit = async () => {
 
         formData.append("title", form.title);
         formData.append("event_date", form.event_date);
+        formData.append("open_time", form.open_time);
+        formData.append("start_time", form.start_time);
         formData.append("live_house", form.live_house);
         formData.append("artist", form.artist);
         formData.append("description", form.description);
@@ -316,14 +364,11 @@ const submit = async () => {
 
         router.push("/lives");
     } catch (error) {
-        console.error(error.response?.data || error);
-
-        if (error.response?.data?.message) {
-            alert(error.response.data.message);
-            return;
-        }
-
-        alert("投稿に失敗しました");
+        errorMessage.value =
+            error.response?.data?.message ||
+            "投稿に失敗しました。入力内容を確認してください。";
+    } finally {
+        isSubmitting.value = false;
     }
 };
 

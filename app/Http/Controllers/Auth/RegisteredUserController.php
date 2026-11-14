@@ -35,6 +35,11 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'terms_accepted' => ['accepted'],
+            'privacy_policy_accepted' => ['accepted'],
+        ], [
+            'terms_accepted.accepted' => '利用規約への同意が必要です。',
+            'privacy_policy_accepted.accepted' => 'プライバシーポリシーへの同意が必要です。',
         ]);
 
         $user = User::create([

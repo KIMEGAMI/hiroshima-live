@@ -12,17 +12,26 @@ class LivePostApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_cannot_create_live_post(): void
+    public function test_guest_can_create_live_post_without_login(): void
     {
         $response = $this->postJson('/api/lives', [
             'title' => 'Guest Live',
             'event_date' => '2026-08-15',
+            'open_time' => '18:00',
+            'start_time' => '19:00',
+            'live_house' => 'Guest Live House',
+            'artist' => 'Guest Band',
+            'description' => 'ログインなしで投稿されたライブです。',
         ]);
 
-        $response->assertUnauthorized();
+        $response
+            ->assertCreated()
+            ->assertJsonPath('title', 'Guest Live')
+            ->assertJsonPath('user_id', null);
 
-        $this->assertDatabaseMissing('live_posts', [
+        $this->assertDatabaseHas('live_posts', [
             'title' => 'Guest Live',
+            'user_id' => null,
         ]);
     }
 

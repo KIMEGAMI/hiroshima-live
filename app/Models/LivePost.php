@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class LivePost extends Model
@@ -21,6 +22,11 @@ class LivePost extends Model
     protected $casts = [
         'event_date' => 'date',
     ];
+
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d');
+    }
 
     public function user()
     {

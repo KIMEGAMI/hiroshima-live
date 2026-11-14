@@ -65,6 +65,30 @@
                         />
                     </div>
 
+                    <div class="space-y-3 rounded-2xl border border-white/10 bg-zinc-900/70 p-4">
+                        <label class="flex cursor-pointer items-start gap-3 text-sm leading-6 text-zinc-200">
+                            <input
+                                v-model="form.terms_accepted"
+                                type="checkbox"
+                                class="mt-1 h-5 w-5 rounded border-white/20 bg-zinc-900 text-red-500"
+                                required
+                            />
+
+                            <span>利用規約に同意します</span>
+                        </label>
+
+                        <label class="flex cursor-pointer items-start gap-3 text-sm leading-6 text-zinc-200">
+                            <input
+                                v-model="form.privacy_policy_accepted"
+                                type="checkbox"
+                                class="mt-1 h-5 w-5 rounded border-white/20 bg-zinc-900 text-red-500"
+                                required
+                            />
+
+                            <span>プライバシーポリシーに同意します</span>
+                        </label>
+                    </div>
+
                     <p v-if="errorMessage" class="text-sm text-red-400">
                         {{ errorMessage }}
                     </p>
@@ -106,6 +130,8 @@ const form = reactive({
     email: "",
     password: "",
     password_confirmation: "",
+    terms_accepted: false,
+    privacy_policy_accepted: false,
 });
 
 const errorMessage = ref("");
@@ -113,26 +139,26 @@ const errorMessage = ref("");
 const register = async () => {
     errorMessage.value = "";
 
-    console.log("register submit");
+    if (!form.terms_accepted || !form.privacy_policy_accepted) {
+        errorMessage.value =
+            "利用規約とプライバシーポリシーへの同意が必要です。";
+        return;
+    }
 
     try {
-        console.log("csrf start");
         await axios.get("/sanctum/csrf-cookie");
-        console.log("csrf ok");
 
-        console.log("register api start");
         await axios.post("/api/register", {
             name: form.name,
             email: form.email,
             password: form.password,
             password_confirmation: form.password_confirmation,
+            terms_accepted: form.terms_accepted,
+            privacy_policy_accepted: form.privacy_policy_accepted,
         });
-        console.log("register api ok");
 
         router.push(route.query.redirect || "/");
     } catch (error) {
-        console.error(error);
-
         if (error.response?.data?.message) {
             errorMessage.value = error.response.data.message;
             return;

@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://hiroshima-live.shinji.work/sitemap.xml
+Sitemap: https://hiroshima-live.kimegami.jp/sitemap.xml

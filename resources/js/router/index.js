@@ -12,6 +12,8 @@ import CalendarPage from "../pages/CalendarPage.vue";
 import ForgotPassword from "../pages/ForgotPassword.vue";
 import ResetPassword from "../pages/ResetPassword.vue";
 import AdminPage from "../pages/AdminPage.vue";
+import TermsPage from "../pages/TermsPage.vue";
+import PrivacyPage from "../pages/PrivacyPage.vue";
 
 const routes = [
     { path: "/", name: "home", component: TopPage },
@@ -34,6 +36,8 @@ const routes = [
     { path: "/lives/:id", name: "lives.show", component: LiveDetailPage },
     { path: "/calendar", name: "calendar", component: CalendarPage },
     { path: "/admin", name: "admin", component: AdminPage },
+    { path: "/terms", name: "terms", component: TermsPage },
+    { path: "/privacy", name: "privacy", component: PrivacyPage },
 ];
 
 const router = createRouter({

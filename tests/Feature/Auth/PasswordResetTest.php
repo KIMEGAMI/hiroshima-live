@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -25,23 +26,30 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this
+            ->postJson('/api/forgot-password', ['email' => $user->email])
+            ->assertOk()
+            ->assertJsonPath('message', '登録済みのメールアドレスの場合、パスワード再設定メールを送信しました。');
 
         Notification::assertSentTo($user, ResetPassword::class);
     }
 
-    public function test_reset_password_screen_can_be_rendered(): void
+    public function test_reset_password_link_points_to_spa_reset_page(): void
     {
         Notification::fake();
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->postJson('/api/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-            $response = $this->get('/reset-password/'.$notification->token);
+        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
+            $actionUrl = $notification->toMail($user)->actionUrl;
+            $query = parse_url($actionUrl, PHP_URL_QUERY);
+            parse_str((string) $query, $parameters);
 
-            $response->assertStatus(200);
+            $this->assertStringStartsWith(config('app.url').'/reset-password?', $actionUrl);
+            $this->assertSame($notification->token, $parameters['token'] ?? null);
+            $this->assertSame($user->email, $parameters['email'] ?? null);
 
             return true;
         });
@@ -53,19 +61,21 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->postJson('/api/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $response = $this->post('/reset-password', [
+        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
+            $response = $this->postJson('/api/reset-password', [
                 'token' => $notification->token,
                 'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
+                'password' => 'new-secure-password',
+                'password_confirmation' => 'new-secure-password',
             ]);
 
             $response
-                ->assertSessionHasNoErrors()
-                ->assertRedirect(route('login'));
+                ->assertOk()
+                ->assertJsonPath('message', 'パスワードを変更しました。');
+
+            $this->assertTrue(Hash::check('new-secure-password', $user->refresh()->password));
 
             return true;
         });

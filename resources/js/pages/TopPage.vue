@@ -257,8 +257,9 @@ const firstDayOfMonth = computed(() => {
 
 const eventDays = computed(() => {
     return allLives.value
-        .filter((live) => live.event_date?.startsWith(currentYearMonth.value))
-        .map((live) => Number(live.event_date?.slice(8, 10)))
+        .map((live) => getEventDate(live))
+        .filter((eventDate) => eventDate.startsWith(currentYearMonth.value))
+        .map((eventDate) => Number(eventDate.slice(8, 10)))
         .filter((day) => !Number.isNaN(day));
 });
 
@@ -272,11 +273,13 @@ const selectedDateLabel = computed(() => {
 
 const displaySourceLives = computed(() => {
     if (!selectedDate.value) {
-        return allLives.value;
+        return [...allLives.value].sort((first, second) => {
+            return (second.id || 0) - (first.id || 0);
+        });
     }
 
     return allLives.value.filter((live) => {
-        return live.event_date === selectedDate.value;
+        return getEventDate(live) === selectedDate.value;
     });
 });
 
@@ -286,6 +289,10 @@ const hasMoreLives = computed(() => {
 
 const formatDate = (date) => {
     return `${currentYearMonth.value}-${String(date).padStart(2, "0")}`;
+};
+
+const getEventDate = (live) => {
+    return String(live.event_date || "").slice(0, 10);
 };
 
 const refreshVisibleLives = () => {
@@ -327,7 +334,12 @@ const fetchLives = async () => {
 
         const data = await response.json();
 
-        allLives.value = data;
+        allLives.value = data.map((live) => {
+            return {
+                ...live,
+                event_date: getEventDate(live),
+            };
+        });
         resetVisibleLives();
     } catch (error) {
         allLives.value = [];

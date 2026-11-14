@@ -69,6 +69,28 @@ router.afterEach((to) => {
         return;
     }
 
+    if (to.path === "/terms") {
+        setSeo({
+            title: "利用規約 | hiroshima-live",
+            description: "hiroshima-liveの利用条件、投稿情報、禁止事項、免責事項について定めた利用規約です。",
+            url: `${SITE_URL}/terms`,
+            image: DEFAULT_IMAGE,
+        });
+
+        return;
+    }
+
+    if (to.path === "/privacy") {
+        setSeo({
+            title: "プライバシーポリシー | hiroshima-live",
+            description: "hiroshima-liveにおける個人情報、投稿データ、画像、認証情報の取り扱い方針です。",
+            url: `${SITE_URL}/privacy`,
+            image: DEFAULT_IMAGE,
+        });
+
+        return;
+    }
+
     if (privateRoutes.has(to.path)) {
         const seo = privateRoutes.get(to.path);
 

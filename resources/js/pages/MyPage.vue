@@ -99,6 +99,48 @@
             >
                 まだ投稿したライブ情報はありません。
             </div>
+            <section
+                v-if="user"
+                class="mt-10 rounded-3xl border border-red-500/30 bg-red-500/10 p-8"
+            >
+                <p class="text-sm font-bold text-red-300">DANGER ZONE</p>
+                <h2 class="mt-2 text-2xl font-black">アカウント削除</h2>
+                <p class="mt-3 text-sm leading-6 text-red-100/80">
+                    アカウントをDBから完全削除します。削除後は元に戻せません。
+                </p>
+
+                <form @submit.prevent="deleteAccount" class="mt-6 space-y-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-bold">
+                            現在のパスワード
+                        </label>
+
+                        <input
+                            v-model="deletePassword"
+                            type="password"
+                            class="w-full rounded-xl border border-red-400/30 bg-zinc-950 px-4 py-3"
+                            autocomplete="current-password"
+                            required
+                        />
+                    </div>
+
+                    <p v-if="deleteMessage" class="text-sm text-red-200">
+                        {{ deleteMessage }}
+                    </p>
+
+                    <button
+                        type="submit"
+                        class="rounded-full bg-red-600 px-6 py-3 font-bold hover:bg-red-700 disabled:opacity-60"
+                        :disabled="isDeleting"
+                    >
+                        {{
+                            isDeleting
+                                ? "削除しています..."
+                                : "アカウントを削除"
+                        }}
+                    </button>
+                </form>
+            </section>
         </main>
 
         <AppFooter />
@@ -107,14 +149,20 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import axios from "axios";
 
 import AppHeader from "../components/layout/AppHeader.vue";
 import AppFooter from "../components/layout/AppFooter.vue";
 
+const router = useRouter();
+
 const loading = ref(true);
 const user = ref(null);
 const lives = ref([]);
+const deletePassword = ref("");
+const deleteMessage = ref("");
+const isDeleting = ref(false);
 
 const fetchData = async () => {
     loading.value = true;
@@ -130,6 +178,56 @@ const fetchData = async () => {
         lives.value = [];
     } finally {
         loading.value = false;
+    }
+};
+
+const deleteAccount = async () => {
+    if (isDeleting.value) {
+        return;
+    }
+
+    if (!deletePassword.value) {
+        deleteMessage.value = "現在のパスワードを入力してください。";
+        return;
+    }
+
+    const confirmed = window.confirm(
+        "アカウントを完全削除します。削除後は元に戻せません。実行しますか？"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    isDeleting.value = true;
+    deleteMessage.value = "";
+
+    try {
+        await axios.delete("/api/user", {
+            data: {
+                password: deletePassword.value,
+            },
+        });
+
+        user.value = null;
+        lives.value = [];
+        deletePassword.value = "";
+
+        window.dispatchEvent(
+            new CustomEvent("auth-changed", {
+                detail: {
+                    user: null,
+                },
+            })
+        );
+
+        router.push("/");
+    } catch (error) {
+        deleteMessage.value =
+            error.response?.data?.message ||
+            "アカウント削除に失敗しました。";
+    } finally {
+        isDeleting.value = false;
     }
 };
 
