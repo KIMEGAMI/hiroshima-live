@@ -34,8 +34,10 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        $request->session()->regenerate();
-        $request->session()->save();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+            $request->session()->save();
+        }
 
         return response()->json([
             'message' => '登録しました。',
@@ -109,6 +111,7 @@ class AuthController extends Controller
         Auth::guard('web')->logout();
 
         $user->delete();
+        Auth::forgetGuards();
 
         if ($request->hasSession()) {
             $request->session()->invalidate();
@@ -148,8 +151,10 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        $request->session()->regenerate();
-        $request->session()->save();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+            $request->session()->save();
+        }
 
         return true;
     }
